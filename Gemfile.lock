@@ -11,3 +11,4 @@ PLATFORMS
 
 DEPENDENCIES
   bundler-audit
+  thor

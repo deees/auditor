@@ -1,0 +1,2 @@
+rails: git@github.com:rails/rails.git
+sample: git@github.com:sample/project.git
