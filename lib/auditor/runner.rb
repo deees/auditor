@@ -1,8 +1,17 @@
 require 'yaml'
 require 'bundler/audit'
+require 'bundler/audit/scanner'
 
 module Auditor
   class Runner
+    class Result
+      attr_accessor :target, :failures, :vulnerabilities
+      def initialize(target)
+        @target = target
+        @failures, @vulnerabilities = [], []
+      end
+    end
+
     def initialize(options)
       @options = options
     end
@@ -10,27 +19,20 @@ module Auditor
     def check(target = :all)
       update_advisories
 
-      vulnerable = []
-      failed = false
+      projects(target).map do |project, repo_url|
+        check_single(project, repo_url)
+      end
+    end
 
-      projects(target).each do |project, repo_url|
-        puts '*' * 75
-        project_root = project_root(project)
-        success = SourceUpdater.new(project_root, repo_url).update!
-        if success
-          puts '-' * 75
-          no_vulnerabilities = audit!(project_root)
-          vulnerable << project unless no_vulnerabilities
+    def check_single(target, repo_url)
+      Result.new(target).tap do |result|
+        project_root = project_root(target)
+        if SourceUpdater.new(project_root, repo_url).update!
+          result.vulnerabilities = vulnerabilities(project_root).to_a
         else
-          puts "Source update FAILED!"
-          failed = true
+          result.failures << 'Source update FAILED!'
         end
       end
-
-      return true if vulnerable.empty? && !failed
-
-      puts "\n\nVULNERABLE PROJECTS: #{vulnerable} (see above for details)"
-      return false
     end
 
     def project_root(target)
@@ -63,9 +65,9 @@ module Auditor
       puts "ruby-advisory-db: #{Bundler::Audit::Database.new.size} advisories"
     end
 
-    def audit!(project_root)
+    def vulnerabilities(project_root)
       puts "Checking for vulnerabilities in #{project_root} with 'bundle-audit'..."
-      Command.execute("cd #{project_root}; bundle-audit")
+      Bundler::Audit::Scanner.new(project_root).scan
     end
   end
 end
