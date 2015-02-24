@@ -1,6 +1,9 @@
 require 'thor'
 require 'bundler/audit/cli'
 
+require 'ext/thor/shell/color'
+require 'ext/bundler/audit/cli'
+
 module Auditor
   class Cli < Thor
     attr_reader :failed
