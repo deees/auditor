@@ -13,7 +13,7 @@ module Auditor
         project = result.target
 
         say "#{project} ", [:blue, :bold]
-        say '-' * (75 - project.length), :blue
+        say '-' * (74 - project.length), :blue
 
         failures = result.failures
         print_failures(project, failures) unless failures.empty?
@@ -24,7 +24,11 @@ module Auditor
         print_audit_conclusion(project)
       end
 
-      exit 1 unless failed.empty?
+      unless failed.empty?
+        say '-' * 75, :blue
+        say "*** VULNERABLE PROJECTS: #{failed.keys} (see above for details)", :red
+        exit 1
+      end
     end
 
     protected
