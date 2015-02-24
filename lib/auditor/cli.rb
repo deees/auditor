@@ -6,7 +6,8 @@ module Auditor
     method_option :config, aliases: '-c'
 
     def check(target = :all)
-      Runner.new(options).check(target)
+      status = Runner.new(options).check(target) ? 0 : 1
+      exit status
     end
   end
 end

@@ -27,9 +27,10 @@ module Auditor
         end
       end
 
-      return if vulnerable.empty? && !failed
+      return true if vulnerable.empty? && !failed
 
       puts "\n\nVULNERABLE PROJECTS: #{vulnerable} (see above for details)"
+      return false
     end
 
     def project_root(target)
