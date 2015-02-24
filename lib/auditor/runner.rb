@@ -11,17 +11,23 @@ module Auditor
       update_advisories
 
       vulnerable = []
+      failed = false
 
       projects(target).each do |project, repo_url|
         puts '*' * 75
         project_root = project_root(project)
-        SourceUpdater.new(project_root, repo_url).update!
-        puts '-' * 75
-        no_vulnerabilities = audit!(project_root)
-        vulnerable << project unless no_vulnerabilities
+        success = SourceUpdater.new(project_root, repo_url).update!
+        if success
+          puts '-' * 75
+          no_vulnerabilities = audit!(project_root)
+          vulnerable << project unless no_vulnerabilities
+        else
+          puts "Source update FAILED!"
+          failed = true
+        end
       end
 
-      return if vulnerable.empty?
+      return if vulnerable.empty? && !failed
 
       puts "\n\nVULNERABLE PROJECTS: #{vulnerable} (see above for details)"
     end
