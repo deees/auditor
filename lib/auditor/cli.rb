@@ -61,9 +61,9 @@ module Auditor
 
     def print_audit_conclusion(project)
       if failed[project]
-        say 'Unpatched versions found!', :red if failed[project] == :audit
+        say 'Vulnerabilities found!', :red if failed[project] == :audit
       else
-        say 'No unpatched versions found', :green
+        say 'No vulnerabilities found', :green
       end
     end
 
