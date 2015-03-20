@@ -30,7 +30,7 @@ module Auditor
       unless failed.empty?
         say '-' * 75, :blue
         say "*** VULNERABLE PROJECTS: #{failed.keys} (see above for details)", :red
-        exit 1
+        exit status_by_failures
       end
     end
 
@@ -44,12 +44,13 @@ module Auditor
     end
 
     def print_vulnerabilities(project, vulnerabilities)
-      mark_as_failed(project, :audit)
       vulnerabilities.each do |vulnerability|
         case vulnerability
         when Bundler::Audit::Scanner::InsecureSource
+          mark_as_failed(project, :insecure_source)
           say "Insecure Source URI found: #{vulnerability.source}", :yellow
         when Bundler::Audit::Scanner::UnpatchedGem
+          mark_as_failed(project, :unpatched_gem)
           print_advisory(vulnerability.gem, vulnerability.advisory)
         end
       end
@@ -61,7 +62,7 @@ module Auditor
 
     def print_audit_conclusion(project)
       if failed[project]
-        say 'Vulnerabilities found!', :red if failed[project] == :audit
+        say 'Vulnerabilities found!', :red if vulnerable?(project)
       else
         say 'No vulnerabilities found', :green
       end
@@ -70,6 +71,14 @@ module Auditor
     def mark_as_failed(project, reason)
       @failed ||= {}
       @failed[project] = reason
+    end
+
+    def vulnerable?(project)
+      [:insecure_source, :unpatched_gem].include?(failed[project])
+    end
+
+    def status_by_failures
+      @failed.key(:unpatched_gem).nil? ? 0 : 1
     end
   end
 end
