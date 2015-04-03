@@ -8,6 +8,11 @@ module Auditor
   class Cli < Thor
     attr_reader :failed
 
+    def initialize(*args)
+      super
+      @failed = {}
+    end
+
     desc 'check TARGET', 'run bundle-audit check on TARGET (default: all)'
     method_option :config, aliases: '-c'
 
@@ -69,7 +74,6 @@ module Auditor
     end
 
     def mark_as_failed(project, reason)
-      @failed ||= {}
       @failed[project] = reason
     end
 
