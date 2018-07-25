@@ -17,7 +17,7 @@ module Auditor
 
     def clone!
       puts "Cloning code to #{project_root}..."
-      Command.execute("git clone #{repo_url} #{project_root}")
+      Command.execute("git clone --depth 1 #{repo_url} #{project_root}")
     end
 
     def pull!
