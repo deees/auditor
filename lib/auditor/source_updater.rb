@@ -22,7 +22,7 @@ module Auditor
 
     def pull!
       puts "Pulling updates to #{project_root}..."
-      Command.execute("cd #{project_root}; git pull origin master")
+      Command.execute("cd #{project_root}; git pull")
     end
   end
 end
