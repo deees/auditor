@@ -1,2 +1,6 @@
 rails: git@github.com:rails/rails.git
 sample: git@github.com:sample/project.git
+sample2:
+  repo_url: git@github.com:sample/project2.git
+  ignore:
+    - CVE-2001-010101

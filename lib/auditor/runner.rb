@@ -19,16 +19,17 @@ module Auditor
     def check(target = :all)
       update_advisories
 
-      projects(target).map do |project, repo_url|
-        check_single(project, repo_url)
+      projects(target).map do |config|
+        check_single(config[:project], config[:source], config[:ignore_advisories])
       end
     end
 
-    def check_single(target, repo_url)
+    def check_single(target, repo_url, ignore_advisories = [])
       Result.new(target).tap do |result|
         project_root = project_root(target)
         if SourceUpdater.new(project_root, repo_url).update!
-          result.vulnerabilities = vulnerabilities(project_root).to_a
+          result.vulnerabilities =
+            vulnerabilities(project_root, ignore_advisories).to_a
         else
           result.failures << 'Source update FAILED!'
         end
@@ -56,7 +57,25 @@ module Auditor
     end
 
     def projects(target)
-      target == :all ? configuration : configuration_for_project(target)
+      config = target == :all ? configuration : configuration_for_project(target)
+
+      config.map do |project, repo_url_or_config|
+        if repo_url_or_config.is_a?(Hash)
+          # new config format
+          {
+            project: project,
+            source: repo_url_or_config['repo_url'],
+            ignore_advisories: repo_url_or_config['ignore']
+          }
+        else
+          # old config format
+          {
+            project: project,
+            source: repo_url_or_config,
+            ignore_advisories: []
+          }
+        end
+      end
     end
 
     def update_advisories
@@ -65,9 +84,12 @@ module Auditor
       puts "ruby-advisory-db: #{Bundler::Audit::Database.new.size} advisories"
     end
 
-    def vulnerabilities(project_root)
+    def vulnerabilities(project_root, ignore_advisories = [])
       puts "Checking for vulnerabilities in #{project_root} with 'bundle-audit'..."
-      Bundler::Audit::Scanner.new(project_root).scan
+      if ignore_advisories && ignore_advisories.any?
+        puts "Ignoring #{ignore_advisories.join(', ')}..."
+      end
+      Bundler::Audit::Scanner.new(project_root).scan(ignore: ignore_advisories)
     end
   end
 end
