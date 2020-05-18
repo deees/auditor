@@ -5,10 +5,11 @@ require 'bundler/audit/scanner'
 module Auditor
   class Runner
     class Result
-      attr_accessor :target, :failures, :vulnerabilities
+      attr_accessor :target, :failures, :vulnerabilities, :ignore_advisories
       def initialize(target)
         @target = target
         @failures, @vulnerabilities = [], []
+        @ignore_advisories = []
       end
     end
 
@@ -28,6 +29,7 @@ module Auditor
       Result.new(target).tap do |result|
         project_root = project_root(target)
         if SourceUpdater.new(project_root, repo_url).update!
+          result.ignore_advisories = ignore_advisories
           result.vulnerabilities =
             vulnerabilities(project_root, ignore_advisories).to_a
         else
@@ -65,7 +67,7 @@ module Auditor
           {
             project: project,
             source: repo_url_or_config['repo_url'],
-            ignore_advisories: repo_url_or_config['ignore']
+            ignore_advisories: repo_url_or_config['ignore'] || []
           }
         else
           # old config format
@@ -86,9 +88,6 @@ module Auditor
 
     def vulnerabilities(project_root, ignore_advisories = [])
       puts "Checking for vulnerabilities in #{project_root} with 'bundle-audit'..."
-      if ignore_advisories && ignore_advisories.any?
-        puts "Ignoring #{ignore_advisories.join(', ')}..."
-      end
       Bundler::Audit::Scanner.new(project_root).scan(ignore: ignore_advisories)
     end
   end

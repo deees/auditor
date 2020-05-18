@@ -23,6 +23,9 @@ module Auditor
         say "#{project} ", [:blue, :bold]
         say '-' * (74 - project.length), :blue
 
+        ignore_advisories = result.ignore_advisories
+        print_ignored_advisories(ignore_advisories) unless ignore_advisories.empty?
+
         failures = result.failures
         print_failures(project, failures) unless failures.empty?
 
@@ -40,6 +43,11 @@ module Auditor
     end
 
     protected
+
+    def print_ignored_advisories(ignore_advisories)
+      say "Ignoring: #{ignore_advisories.join(', ')}...", :yellow
+      say
+    end
 
     def print_failures(project, failures)
       mark_as_failed(project, :git)
