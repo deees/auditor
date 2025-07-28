@@ -57,20 +57,18 @@ module Auditor
     end
 
     def print_vulnerabilities(project, vulnerabilities)
+      extend Bundler::Audit::CLI::Formats.load(:text)
+
       vulnerabilities.each do |vulnerability|
         case vulnerability
-        when Bundler::Audit::Scanner::InsecureSource
+        when Bundler::Audit::Results::InsecureSource
           mark_as_failed(project, :insecure_source)
           say "Insecure Source URI found: #{vulnerability.source}", :yellow
-        when Bundler::Audit::Scanner::UnpatchedGem
+        when Bundler::Audit::Results::UnpatchedGem
           mark_as_failed(project, :unpatched_gem)
           print_advisory(vulnerability.gem, vulnerability.advisory)
         end
       end
-    end
-
-    def print_advisory(gem, advisory)
-      Bundler::Audit::CLI.new.send(:print_advisory, gem, advisory)
     end
 
     def print_audit_conclusion(project)
